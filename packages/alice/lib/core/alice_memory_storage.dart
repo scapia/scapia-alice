@@ -6,7 +6,6 @@ import 'package:alice/model/alice_http_call.dart';
 import 'package:alice/model/alice_http_error.dart';
 import 'package:alice/model/alice_http_response.dart';
 import 'package:alice/utils/num_comparison.dart';
-import 'package:collection/collection.dart';
 
 class AliceMemoryStorage implements AliceStorage {
   AliceMemoryStorage({required this.maxCallsCount})
@@ -80,5 +79,5 @@ class AliceMemoryStorage implements AliceStorage {
 
   @override
   AliceHttpCall? selectCall(int requestId) =>
-      _calls.firstWhereOrNull((c) => c.id == requestId);
+      _calls.where((c) => c.id == requestId).firstOrNull;
 }

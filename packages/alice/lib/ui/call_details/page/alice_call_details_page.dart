@@ -9,7 +9,6 @@ import 'package:alice/ui/call_details/widget/alice_call_response_screen.dart';
 import 'package:alice/ui/common/alice_context_ext.dart';
 import 'package:alice/ui/common/alice_page.dart';
 import 'package:alice/ui/common/alice_theme.dart';
-import 'package:collection/collection.dart' show IterableExtension;
 import 'package:flutter/material.dart';
 
 /// Call details page which displays 4 tabs: overview, request, response, error.
@@ -41,9 +40,9 @@ class _AliceCallDetailsPageState extends State<AliceCallDetailsPage>
         initialData: [widget.call],
         builder: (context, AsyncSnapshot<List<AliceHttpCall>> callsSnapshot) {
           if (callsSnapshot.hasData && !callsSnapshot.hasError) {
-            final AliceHttpCall? call = callsSnapshot.data?.firstWhereOrNull(
-              (AliceHttpCall snapshotCall) => snapshotCall.id == widget.call.id,
-            );
+            final AliceHttpCall? call = callsSnapshot.data
+                ?.where((snapshotCall) => snapshotCall.id == widget.call.id)
+                .firstOrNull;
             if (call != null) {
               return DefaultTabController(
                 length: 4,
