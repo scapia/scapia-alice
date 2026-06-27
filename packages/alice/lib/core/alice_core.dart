@@ -2,28 +2,17 @@ import 'dart:async' show FutureOr, StreamSubscription;
 
 import 'package:alice/core/alice_storage.dart';
 import 'package:alice/core/alice_utils.dart';
-import 'package:alice/helper/alice_export_helper.dart';
-import 'package:alice/core/alice_notification.dart';
-import 'package:alice/helper/operating_system.dart';
 import 'package:alice/model/alice_configuration.dart';
-import 'package:alice/model/alice_export_result.dart';
 import 'package:alice/model/alice_http_call.dart';
 import 'package:alice/model/alice_http_error.dart';
 import 'package:alice/model/alice_http_response.dart';
 import 'package:alice/model/alice_log.dart';
 import 'package:alice/ui/common/alice_navigation.dart';
-import 'package:alice/utils/shake_detector.dart';
 import 'package:flutter/material.dart';
 
 class AliceCore {
   /// Configuration of Alice
   late AliceConfiguration _configuration;
-
-  /// Detector used to detect device shakes
-  ShakeDetector? _shakeDetector;
-
-  /// Helper used for notification management
-  AliceNotification? _notification;
 
   /// Subscription for call changes
   StreamSubscription<List<AliceHttpCall>>? _callsSubscription;
@@ -35,21 +24,6 @@ class AliceCore {
   AliceCore({required AliceConfiguration configuration}) {
     _configuration = configuration;
     _subscribeToCallChanges();
-    if (_configuration.showNotification) {
-      _notification = AliceNotification();
-      _notification?.configure(
-        notificationIcon: _configuration.notificationIcon,
-        openInspectorCallback: navigateToCallListScreen,
-      );
-    }
-    if (_configuration.showInspectorOnShake) {
-      if (OperatingSystem.isAndroid || OperatingSystem.isIOS) {
-        _shakeDetector = ShakeDetector.autoStart(
-          onPhoneShake: navigateToCallListScreen,
-          shakeThresholdGravity: 4,
-        );
-      }
-    }
   }
 
   /// Returns current configuration
@@ -62,19 +36,7 @@ class AliceCore {
 
   /// Dispose subjects and subscriptions
   void dispose() {
-    _shakeDetector?.stopListening();
     _unsubscribeFromCallChanges();
-  }
-
-  /// Called when calls has been updated
-  Future<void> _onCallsChanged(List<AliceHttpCall>? calls) async {
-    if (calls != null && calls.isNotEmpty) {
-      final AliceStats stats = _configuration.aliceStorage.getStats();
-      _notification?.showStatsNotification(
-        context: getContext()!,
-        stats: stats,
-      );
-    }
   }
 
   /// Opens Http calls inspector. This will navigate user to the new fullscreen
@@ -126,13 +88,6 @@ class AliceCore {
   /// Returns all stored HTTP calls.
   List<AliceHttpCall> getCalls() => _configuration.aliceStorage.getCalls();
 
-  /// Save all calls to file.
-  Future<AliceExportResult> saveCallsToFile(BuildContext context) =>
-      AliceExportHelper.saveCallsToFile(
-        context,
-        _configuration.aliceStorage.getCalls(),
-      );
-
   /// Adds new log to Alice logger.
   void addLog(AliceLog log) => _configuration.aliceLogger.add(log);
 
@@ -144,9 +99,7 @@ class AliceCore {
 
   /// Subscribes to storage for call changes.
   void _subscribeToCallChanges() {
-    _callsSubscription = _configuration.aliceStorage.callsStream.listen(
-      _onCallsChanged,
-    );
+    _callsSubscription = _configuration.aliceStorage.callsStream.listen((_) {});
   }
 
   /// Unsubscribes storage for call changes.

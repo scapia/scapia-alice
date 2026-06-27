@@ -1,8 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:alice/core/alice_core.dart';
-import 'package:alice/helper/operating_system.dart';
-import 'package:alice/model/alice_export_result.dart';
 import 'package:alice/model/alice_http_call.dart';
 import 'package:alice/model/alice_translation.dart';
 import 'package:alice/ui/call_details/model/alice_menu_item.dart';
@@ -17,7 +15,6 @@ import 'package:alice/ui/common/alice_page.dart';
 import 'package:alice/ui/calls_list/widget/alice_logs_screen.dart';
 import 'package:alice/ui/common/alice_theme.dart';
 import 'package:flutter/material.dart';
-import 'package:open_filex/open_filex.dart';
 
 /// Page which displays list of calls caught by Alice. It displays tab view
 /// where calls and logs can be inspected. It allows to sort calls, delete calls
@@ -156,14 +153,12 @@ class _AliceCallsListPageState extends State<AliceCallsListPage>
     }
   }
 
-  /// Called when back button has been pressed. It navigates back to original
-  /// application.
+  /// Called when back button has been pressed.
   void _onBackPressed() {
     Navigator.of(context).pop();
   }
 
-  /// Called when clear logs has been pressed. It displays dialog and awaits for
-  /// user confirmation.
+  /// Called when clear logs has been pressed.
   void _onClearLogsPressed() => AliceGeneralDialog.show(
     context: context,
     title: context.i18n(AliceTranslationKey.callsListDeleteLogsDialogTitle),
@@ -215,8 +210,6 @@ class _AliceCallsListPageState extends State<AliceCallsListPage>
         _onRemovePressed();
       case AliceCallDetailsMenuItemType.stats:
         _onStatsPressed();
-      case AliceCallDetailsMenuItemType.save:
-        _saveToFile();
     }
   }
 
@@ -245,64 +238,10 @@ class _AliceCallsListPageState extends State<AliceCallsListPage>
     AliceNavigation.navigateToStats(core: aliceCore);
   }
 
-  /// Called when save to file has been pressed. It saves data to file.
-  void _saveToFile() async {
-    if (!mounted) return;
-    final result = await aliceCore.saveCallsToFile(context);
-
-    if (result.success && result.path != null) {
-      AliceGeneralDialog.show(
-        context: context,
-        title: context.i18n(AliceTranslationKey.saveSuccessTitle),
-        description: context
-            .i18n(AliceTranslationKey.saveSuccessDescription)
-            .replaceAll("[path]", result.path!),
-        secondButtonTitle:
-            OperatingSystem.isAndroid
-                ? context.i18n(AliceTranslationKey.saveSuccessView)
-                : null,
-        secondButtonAction:
-            () =>
-                OperatingSystem.isAndroid ? OpenFilex.open(result.path!) : null,
-      );
-    } else {
-      final [String title, String description] = switch (result.error) {
-        AliceExportResultError.logGenerate => [
-          context.i18n(AliceTranslationKey.saveDialogPermissionErrorTitle),
-          context.i18n(
-            AliceTranslationKey.saveDialogPermissionErrorDescription,
-          ),
-        ],
-        AliceExportResultError.empty => [
-          context.i18n(AliceTranslationKey.saveDialogEmptyErrorTitle),
-          context.i18n(AliceTranslationKey.saveDialogEmptyErrorDescription),
-        ],
-        AliceExportResultError.permission => [
-          context.i18n(AliceTranslationKey.saveDialogPermissionErrorTitle),
-          context.i18n(
-            AliceTranslationKey.saveDialogPermissionErrorDescription,
-          ),
-        ],
-        AliceExportResultError.file => [
-          context.i18n(AliceTranslationKey.saveDialogFileSaveErrorTitle),
-          context.i18n(AliceTranslationKey.saveDialogFileSaveErrorDescription),
-        ],
-        _ => ["", ""],
-      };
-
-      AliceGeneralDialog.show(
-        context: context,
-        title: title,
-        description: description,
-      );
-    }
-  }
-
   /// Filters calls based on query.
   void _updateSearchQuery(String query) => setState(() {});
 
-  /// Called when sort button has been pressed. It opens dialog where filters
-  /// can be picked.
+  /// Called when sort button has been pressed.
   Future<void> _onSortPressed() async {
     AliceSortDialogResult? result = await showDialog<AliceSortDialogResult>(
       context: context,
@@ -372,8 +311,7 @@ class _SearchTextField extends StatelessWidget {
   }
 }
 
-/// Menu button displayed in app bar. It displays overflow menu with additional
-/// actions.
+/// Menu button displayed in app bar.
 class _ContextMenuButton extends StatelessWidget {
   const _ContextMenuButton({required this.onMenuItemSelected});
 
@@ -401,7 +339,6 @@ class _ContextMenuButton extends StatelessWidget {
     );
   }
 
-  /// Get title of the menu item based on [itemType].
   String _getTitle({
     required BuildContext context,
     required AliceCallDetailsMenuItemType itemType,
@@ -413,12 +350,9 @@ class _ContextMenuButton extends StatelessWidget {
         return context.i18n(AliceTranslationKey.callsListDelete);
       case AliceCallDetailsMenuItemType.stats:
         return context.i18n(AliceTranslationKey.callsListStats);
-      case AliceCallDetailsMenuItemType.save:
-        return context.i18n(AliceTranslationKey.callsListSave);
     }
   }
 
-  /// Get icon of the menu item based [itemType].
   IconData _getIcon({required AliceCallDetailsMenuItemType itemType}) {
     switch (itemType) {
       case AliceCallDetailsMenuItemType.sort:
@@ -427,8 +361,6 @@ class _ContextMenuButton extends StatelessWidget {
         return Icons.delete;
       case AliceCallDetailsMenuItemType.stats:
         return Icons.insert_chart;
-      case AliceCallDetailsMenuItemType.save:
-        return Icons.save;
     }
   }
 }
