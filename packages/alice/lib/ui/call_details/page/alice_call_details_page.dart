@@ -1,7 +1,4 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'package:alice/core/alice_core.dart';
-import 'package:alice/helper/alice_export_helper.dart';
 import 'package:alice/model/alice_http_call.dart';
 import 'package:alice/model/alice_translation.dart';
 import 'package:alice/ui/call_details/model/alice_call_details_tab.dart';
@@ -12,7 +9,6 @@ import 'package:alice/ui/call_details/widget/alice_call_response_screen.dart';
 import 'package:alice/ui/common/alice_context_ext.dart';
 import 'package:alice/ui/common/alice_page.dart';
 import 'package:alice/ui/common/alice_theme.dart';
-import 'package:collection/collection.dart' show IterableExtension;
 import 'package:flutter/material.dart';
 
 /// Call details page which displays 4 tabs: overview, request, response, error.
@@ -44,9 +40,9 @@ class _AliceCallDetailsPageState extends State<AliceCallDetailsPage>
         initialData: [widget.call],
         builder: (context, AsyncSnapshot<List<AliceHttpCall>> callsSnapshot) {
           if (callsSnapshot.hasData && !callsSnapshot.hasError) {
-            final AliceHttpCall? call = callsSnapshot.data?.firstWhereOrNull(
-              (AliceHttpCall snapshotCall) => snapshotCall.id == widget.call.id,
-            );
+            final AliceHttpCall? call = callsSnapshot.data
+                ?.where((snapshotCall) => snapshotCall.id == widget.call.id)
+                .firstOrNull;
             if (call != null) {
               return DefaultTabController(
                 length: 4,
@@ -75,18 +71,6 @@ class _AliceCallDetailsPageState extends State<AliceCallDetailsPage>
                       AliceCallErrorScreen(call: widget.call),
                     ],
                   ),
-                  floatingActionButton:
-                      widget.core.configuration.showShareButton
-                          ? FloatingActionButton(
-                            backgroundColor: AliceTheme.lightRed,
-                            key: const Key('share_key'),
-                            onPressed: _shareCall,
-                            child: const Icon(
-                              Icons.share,
-                              color: AliceTheme.white,
-                            ),
-                          )
-                          : null,
                 ),
               );
             }
@@ -98,12 +82,6 @@ class _AliceCallDetailsPageState extends State<AliceCallDetailsPage>
         },
       ),
     );
-  }
-
-  /// Called when share button has been pressed. It encodes the [widget.call]
-  /// and tries to invoke system action to share it.
-  void _shareCall() async {
-    await AliceExportHelper.shareCall(context: context, call: widget.call);
   }
 
   /// Get tab name based on [item] type.

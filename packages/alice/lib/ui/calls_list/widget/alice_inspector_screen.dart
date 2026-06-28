@@ -38,8 +38,9 @@ class _AliceInspectorScreenState extends State<AliceInspectorScreen>
 
     return StreamBuilder<List<AliceHttpCall>>(
       stream: widget.aliceCore.callsStream,
+      initialData: widget.aliceCore.getCalls(),
       builder: (context, AsyncSnapshot<List<AliceHttpCall>> snapshot) {
-        final List<AliceHttpCall> calls = snapshot.data ?? [];
+        final List<AliceHttpCall> calls = List.of(snapshot.data ?? []);
         final String query = widget.queryTextEditingController.text.trim();
         if (query.isNotEmpty) {
           calls.removeWhere(

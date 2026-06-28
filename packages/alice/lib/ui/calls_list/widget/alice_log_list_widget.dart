@@ -16,11 +16,13 @@ class AliceLogListWidget extends StatefulWidget {
   const AliceLogListWidget({
     required this.logsStream,
     required this.scrollController,
+    this.initialLogs,
     super.key,
   });
 
   final Stream<List<AliceLog>>? logsStream;
   final ScrollController? scrollController;
+  final List<AliceLog>? initialLogs;
 
   @override
   State<AliceLogListWidget> createState() => _AliceLogListWidgetState();
@@ -34,6 +36,7 @@ class _AliceLogListWidgetState extends State<AliceLogListWidget> {
   Widget build(BuildContext context) {
     return StreamBuilder<List<AliceLog>>(
       stream: widget.logsStream,
+      initialData: widget.initialLogs,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.none ||
             snapshot.connectionState == ConnectionState.waiting) {

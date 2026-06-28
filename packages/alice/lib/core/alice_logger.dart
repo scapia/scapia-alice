@@ -1,66 +1,52 @@
-import 'dart:io' show Process, ProcessResult;
+import 'dart:async';
+import 'dart:io' show Platform, Process, ProcessResult;
 
-import 'package:alice/helper/operating_system.dart';
 import 'package:alice/model/alice_log.dart';
-import 'package:rxdart/rxdart.dart';
 
 /// Logger used to handle logs from application.
 class AliceLogger {
-  /// Maximum logs size. If 0, logs will be not rotated.
+  /// Maximum logs size. If 0, logs will not be rotated.
   final int maximumSize;
 
-  /// Subject which keeps logs.
-  final BehaviorSubject<List<AliceLog>> _logsSubject;
+  final List<AliceLog> _logs = [];
+  final _controller = StreamController<List<AliceLog>>.broadcast();
 
-  AliceLogger({required this.maximumSize})
-    : _logsSubject = BehaviorSubject.seeded([]);
+  AliceLogger({required this.maximumSize});
 
-  /// Getter of stream of logs
-  Stream<List<AliceLog>> get logsStream => _logsSubject.stream;
+  Stream<List<AliceLog>> get logsStream => _controller.stream;
 
-  /// Getter of all logs
-  List<AliceLog> get logs => _logsSubject.value;
+  List<AliceLog> get logs => List.of(_logs);
 
-  /// Adds all logs.
   void addAll(Iterable<AliceLog> logs) {
-    for (var log in logs) {
+    for (final log in logs) {
       add(log);
     }
   }
 
-  /// Add one log. It sorts logs after adding new element. If [maximumSize] is
-  /// set and max size is reached, first log will be deleted.
   void add(AliceLog log) {
-    final values = _logsSubject.value;
-    final count = values.length;
-    if (maximumSize > 0 && count >= maximumSize) {
-      values.removeAt(0);
+    if (maximumSize > 0 && _logs.length >= maximumSize) {
+      _logs.removeAt(0);
     }
-
-    values.add(log);
-    values.sort((log1, log2) => log1.timestamp.compareTo(log2.timestamp));
-    _logsSubject.add(values);
+    _logs.add(log);
+    _logs.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+    _controller.add(List.of(_logs));
   }
 
-  /// Clears all logs.
-  void clearLogs() => _logsSubject.add([]);
+  void clearLogs() {
+    _logs.clear();
+    _controller.add([]);
+  }
 
-  /// Returns raw logs from Android via ADB.
   Future<String> getAndroidRawLogs() async {
-    if (OperatingSystem.isAndroid) {
-      final ProcessResult process = await Process.run('logcat', [
-        '-v',
-        'raw',
-        '-d',
-      ]);
+    if (Platform.isAndroid) {
+      final ProcessResult process = await Process.run('logcat', ['-v', 'raw', '-d']);
       return process.stdout as String;
     }
     return '';
   }
 
-  /// Clears all raw logs.
   Future<void> clearAndroidRawLogs() async {
-    if (OperatingSystem.isAndroid) {
+    if (Platform.isAndroid) {
       await Process.run('logcat', ['-c']);
     }
   }
